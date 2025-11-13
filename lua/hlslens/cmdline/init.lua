@@ -32,6 +32,7 @@ local disposable = require('hlslens.lib.disposable')
 ---@field matchStart number[] (1, 0)-indexed position
 ---@field matchEnd number[] (1, 0)-indexed position
 ---@field keyCode number[]
+---@field last_range? number[]
 local CmdLine = {
     initialized = false,
     disposables = {}
@@ -234,10 +235,11 @@ function CmdLine:didChange()
     else
         self:resetState()
         render.clear(true, 0, true)
-        if self.parser.pattern == '' then
+        if self.last_range then
             vim.schedule(vim.cmd.redraw)
         end
     end
+    self.last_range = range
 end
 
 function CmdLine:detach(typ, abort)
