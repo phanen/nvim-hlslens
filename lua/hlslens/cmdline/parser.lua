@@ -79,13 +79,25 @@ function CmdLineParser:validatePattern()
     return true
 end
 
+---@param line string
+---@return table?
+local safe_parse_cmd = function(line)
+    if not vim._with then
+        local ok, res = pcall(api.nvim_parse_cmd, line, {})
+        return ok and res or nil
+    end
+    return vim._with({emsg_silent = true}, function()
+        return api.nvim_parse_cmd(line, {})
+    end)
+end
+
 function CmdLineParser:doParse()
     if self.type == ':' then
         if #self.line > 200 or not api.nvim_parse_cmd then
             return false
         end
-        local ok, parsed = pcall(api.nvim_parse_cmd, self.line, {})
-        if ok then
+        local parsed = safe_parse_cmd(self.line)
+        if parsed then
             if self.builtinCmds[parsed.cmd] then
                 self.name, self.range = parsed.cmd, parsed.range
                 if self.range == nil or vim.tbl_isempty(self.range) then
