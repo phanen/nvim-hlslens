@@ -86,9 +86,10 @@ local safe_parse_cmd = function(line)
         local ok, res = pcall(api.nvim_parse_cmd, line, {})
         return ok and res or nil
     end
-    return vim._with({emsg_silent = true}, function()
-        return api.nvim_parse_cmd(line, {})
-    end)
+    -- https://github.com/neovim/neovim/issues/37850
+    _G.__hlslen_safe_parse_cmd = nil
+    cmd(([[silent! lua _G.__hlslen_safe_parse_cmd = vim.api.nvim_parse_cmd(%q, {})]]):format(line))
+    return _G.__hlslen_safe_parse_cmd
 end
 
 function CmdLineParser:doParse()
